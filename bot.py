@@ -1,6 +1,6 @@
 # bot.py
 # Author: Michael DeVito
-
+# Purpose: Main file for BCP bot
 
 # Import necessary libraries
 import discord
