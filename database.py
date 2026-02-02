@@ -1,8 +1,7 @@
 # database.py
 # Author: Michael DeVito
 
-from asyncio import open_connection
-import os
+import csv
 import sqlite3
 from pathlib import Path
 from datetime import date
@@ -17,7 +16,43 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS servers
                 (server_id INTEGER PRIMARY KEY, prefix TEXT, time TEXT, channel TEXT)''')
     conn.commit()
+    c.execute("SELECT * FROM collects WHERE date = '01-01'")
+    test = c.fetchone()
+    if test:
+        conn.close()
+    else:
+        print("Re-seeding DB")
+        seed_db()
+        conn.close()
+
+def seed_db():
+    CSV = Path("database/all_collects.csv")
+    DB_PATH = Path("database/main.db")
+
+    # if CSV file isn't found, throw an error
+    if not CSV.exists():
+        print(f"all_collects.csv not found.")
+
+    # Get rows from .csv file
+    with CSV.open(newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+
+        rows = []
+        for row in reader:
+            date = row.get("Date","").strip()
+            collect = row.get("Collect","").strip()
+            feast = row.get("Feast","").strip()
+            color = row.get("Color","").strip()
+
+            rows.append((date, collect, feast, color))
+
+    # Add rows to DB
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.executemany('INSERT INTO collects (date, collect, feast, color) VALUES (?, ?, ?, ?)', rows)
+    conn.commit()
     conn.close()
+    print(f"Inserted {len(rows)} rows into database")
 
 def ensureGuildExists(server_id: int):
     conn = sqlite3.connect(DB_PATH)
