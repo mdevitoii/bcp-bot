@@ -39,7 +39,7 @@ async def get_prefix(bot, message):
     return commands.when_mentioned_or(p)(bot, message)
 
 # Set up bot with command prefix
-bot = commands.Bot(command_prefix=get_prefix, intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 
 ''' All Events '''
