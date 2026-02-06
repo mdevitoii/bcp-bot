@@ -31,8 +31,15 @@ intents = discord.Intents.default()
 intents.message_content = True
 # if something is broken, may need to add an intent
 
+# Function to get command prefix
+async def get_prefix(bot, message):
+
+    p = db.getPrefix(message.guild.id)
+    
+    return commands.when_mentioned_or(p)(bot, message)
+
 # Set up bot with command prefix
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix=get_prefix, intents=intents)
 bot.remove_command('help')
 
 ''' All Events '''
@@ -87,9 +94,6 @@ async def daily_message():
         embed.add_field(name = '', value = f'{collect}', inline = False)
         await channel.send(embed=embed)
 
-@daily_message.before_loop
-async def before_daily_message():
-    await bot.wait_until_ready()
 
 
 ''' Commands '''
@@ -102,10 +106,25 @@ async def help(ctx):
     )
     embed.add_field(name = "enableCollects", value = "Enables the daily collects feature.", inline = False)
     embed.add_field(name = "setchannel", value = "Sets the channel to post in.", inline = False)
-    embed.add_field(name = "settime", value = "Sets the time for daily messages", inline = False)
+    embed.add_field(name = "settime", value = "Sets the time for daily messages.", inline = False)
+    embed.add_field(name = "prefix <prefix>", value = "Sets the bot's prefix for commands.", inline = False)
 
     await ctx.send(embed=embed)
-    
+
+# !prefix <prefix>
+@bot.command()
+@commands.has_permissions(administrator=True) # only admin can use this
+async def prefix(ctx, prefix):
+
+    db.setPrefix(ctx.guild.id, prefix)
+
+    embed = discord.Embed(
+        title = "Changed Prefix",
+        color = discord.Color.blue()
+    )
+    embed.add_field(name = "", value = f"Prefix has been changed to {prefix}")
+
+    await ctx.send(embed=embed)
 
 # Run the bot
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)

@@ -57,17 +57,22 @@ def seed_db():
 def ensureGuildExists(server_id: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("INSERT INTO servers (server_id) VALUES (?) ON CONFLICT(server_id) DO NOTHING;", (server_id,))
+    c.execute("SELECT prefix FROM servers WHERE server_id = ?", (server_id,))
     conn.commit()
+    test = c.fetchone()
     conn.close()
-    print(f"Server added: {server_id}")
+    if test:
+        print(f"Server initialized: {server_id}")
+    else:
+        addServer(server_id)
 
 def addServer(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("INSERT INTO servers (server_id) VALUES (?)", (server_id))
+    c.execute("INSERT INTO servers (server_id, prefix) VALUES (?, ?)", (server_id, "!")) # insert default values
     conn.commit()
     conn.close()
+    print(f"Added new server: {server_id}")
 
 def getPrefix(server_id):
     conn = sqlite3.connect(DB_PATH)
@@ -76,6 +81,14 @@ def getPrefix(server_id):
     prefix = c.fetchone()
     conn.close()
     return prefix
+
+def setPrefix(server_id, prefix):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE servers SET prefix = ? WHERE server_id = ?", (prefix,server_id))
+    conn.commit()
+    conn.close()
+    print(f"Set prefix to {prefix} for server {server_id}")
 
 def getTime(server_id):
     conn = sqlite3.connect(DB_PATH)
