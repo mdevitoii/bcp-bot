@@ -35,7 +35,7 @@ intents.message_content = True
 async def get_prefix(bot, message):
 
     p = db.getPrefix(message.guild.id)
-    print(p)
+    print("prefix is" + p)
     
     return commands.when_mentioned_or(p)(bot, message)
 
