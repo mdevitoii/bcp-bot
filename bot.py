@@ -67,8 +67,7 @@ async def on_guild_join(guild):
 
 # Main Loop for daily collect time time=time(hour=7, minute=0)
 # Note: Time is in GMT (EST + 5 hours)
-# @tasks.loop(time=time(hour=12, minute=0)) 
-@tasks.loop(seconds=30)
+@tasks.loop(time=time(hour=12, minute=0)) 
 async def daily_message():
 
     # Get all servers and channels
