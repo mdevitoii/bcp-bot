@@ -14,7 +14,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS collects
                     (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS servers
-                (server_id INTEGER PRIMARY KEY, prefix TEXT, time TEXT, channel TEXT)''')
+                (server_id INTEGER PRIMARY KEY, prefix TEXT, time TEXT, channel INTEGER, enabled INTEGER)''')
     conn.commit()
     c.execute("SELECT * FROM collects WHERE date = '01-01'")
     test = c.fetchone()
@@ -69,7 +69,7 @@ def ensureGuildExists(server_id: int):
 def addServer(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("INSERT INTO servers (server_id, prefix) VALUES (?, ?)", (server_id, "!")) # insert default values
+    c.execute("INSERT INTO servers (server_id, prefix, enabled) VALUES (?, ?, ?)", (server_id, "!", 0)) # insert default values
     conn.commit()
     conn.close()
     print(f"Added new server: {server_id}")
@@ -93,19 +93,58 @@ def setPrefix(server_id, prefix):
 def getTime(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT time FROM servers WHERE server_id = ?", (server_id))
+    c.execute("SELECT time FROM servers WHERE server_id = ?", (server_id,))
     time = c.fetchone()
     conn.close()
     return time
 
-def getChannel(server_id):
+async def getChannels():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT channel FROM servers WHERE server_id = ?", (server_id))
+    c.execute("SELECT server_id, channel FROM servers")
+    channels = c.fetchall()
+    conn.close()
+    return channels
+
+async def getChannel(server_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT channel FROM servers WHERE server_id = ?", (server_id,))
     channel = c.fetchone()
     conn.close()
-    return channel
+    return channel[0]
 
+def setChannel(server_id, channel_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE servers SET channel = ? WHERE server_id = ?", (channel_id,server_id))
+    conn.commit()
+    conn.close()
+    print(f"Set channel to {channel_id} for server {server_id}")
+
+async def getStatus(server_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT enabled FROM servers WHERE server_id = ?", (server_id,))
+    status = c.fetchone()
+    if status[0] == 1:
+        return True
+    else:
+        return False
+
+def setStatus(server_id, status):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    enabled = 0
+    if status:
+        enabled = 1
+    c.execute("UPDATE servers SET enabled = ? WHERE server_id = ?", (enabled,server_id))
+    conn.commit()
+    conn.close()
+    print(f"Set status to {enabled} for server {server_id}")
+    
+
+# Functions for daily collect
 def getTodaysCollect():
     today = str(date.today())[-5:] # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
