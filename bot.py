@@ -29,18 +29,23 @@ handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'
 # Set up permissions
 intents = discord.Intents.default()
 intents.message_content = True
+intents.guilds = True
 # if something is broken, may need to add an intent
 
 # Function to get command prefix
 async def get_prefix(bot, message):
 
-    p = db.getPrefix(message.guild.id)
-    print("prefix is" + p)
+    if not message.guild:
+        return commands.when_mentioned_or('!')(bot, message) # Default prefix for DMs
+
+    p = await db.getPrefix(message.guild.id)
+    if not p:
+        p = '!'
     
     return commands.when_mentioned_or(p)(bot, message)
 
 # Set up bot with command prefix
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix=get_prefix, intents=intents)
 bot.remove_command('help')
 
 ''' All Events '''

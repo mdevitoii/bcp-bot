@@ -74,13 +74,13 @@ def addServer(server_id):
     conn.close()
     print(f"Added new server: {server_id}")
 
-def getPrefix(server_id):
+async def getPrefix(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT prefix FROM servers WHERE server_id = ?", (server_id))
+    c.execute("SELECT prefix FROM servers WHERE server_id = ?", (server_id,))
     prefix = c.fetchone()
     conn.close()
-    return prefix
+    return prefix[0]
 
 def setPrefix(server_id, prefix):
     conn = sqlite3.connect(DB_PATH)
