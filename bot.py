@@ -19,7 +19,6 @@ db.init_db()
 # Load .env file variables
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
-
 if not token:
     raise ValueError("DISCORD_TOKEN not set in .env file.")
 
@@ -68,37 +67,52 @@ async def on_guild_join(guild):
 
 # Main Loop for daily collect time time=time(hour=7, minute=0)
 # Note: Time is in GMT (EST + 5 hours)
-@tasks.loop(time=time(hour=12, minute=0)) 
+# @tasks.loop(time=time(hour=12, minute=0)) 
+@tasks.loop(seconds=30)
 async def daily_message():
 
-    # Load server config from DB (implement later)
-    CHANNEL_ID = 964543319290036224
+    # Get all servers and channels
+    channels = await db.getChannels()
 
-    channel = bot.get_channel(CHANNEL_ID) # channel_id = channel message is sent to
-    if isinstance(channel, discord.TextChannel):
-        
-        date = datetime.today().strftime('%m/%d')
-        collect = db.getTodaysCollect()
-        feast = db.getTodaysFeast()
-        color = db.getTodaysColor().lower()     
-        match color:
-            case "pink":
-                color = discord.Color.pink()
-            case "red":
-                color = discord.Color.red()
-            case "white":
-                color = discord.Color.from_rgb(255,255,255)
-            case "purple":
-                color = discord.Color.purple()
-            case _:
-                color = discord.Color.green()
+    # Send message in each server
+    for server in channels:
 
-        embed = discord.Embed(
-            title = f'{date} - {feast}',
-            color = color
-        )
-        embed.add_field(name = '', value = f'{collect}', inline = False)
-        await channel.send(embed=embed)
+        # Check if server has daily message enabled. Stop if not enabled
+        status = await db.getStatus(server[0])
+        if status:
+            channel_id = server[1]
+
+            # Ensure channel exists
+            if channel_id:
+                channel = bot.get_channel((int) (channel_id))
+
+                # Double-check bot can send messages in this channel
+                if isinstance(channel, discord.TextChannel): 
+
+                    # Building embed     
+                    date = datetime.today().strftime('%m/%d')
+                    collect = db.getTodaysCollect()
+                    feast = db.getTodaysFeast()
+                    color = db.getTodaysColor().lower()     
+                    match color:
+                        case "pink":
+                            color = discord.Color.pink()
+                        case "red":
+                            color = discord.Color.red()
+                        case "white":
+                            color = discord.Color.from_rgb(255,255,255)
+                        case "purple":
+                            color = discord.Color.purple()
+                        case _:
+                            color = discord.Color.green()
+                    embed = discord.Embed(
+                        title = f'{date} - {feast}',
+                        color = color
+                    )
+                    embed.add_field(name = '', value = f'{collect}', inline = False)
+                    
+                    # Send message
+                    await channel.send(embed=embed)
 
 
 
@@ -123,7 +137,6 @@ async def help(ctx):
 async def prefix(ctx, prefix):
 
     db.setPrefix(ctx.guild.id, prefix)
-
     embed = discord.Embed(
         title = "Changed Prefix",
         color = discord.Color.blue()
@@ -132,5 +145,87 @@ async def prefix(ctx, prefix):
 
     await ctx.send(embed=embed)
 
+# !setchannel
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def setchannel(bot):
+
+    db.setChannel(bot.guild.id,bot.channel.id)
+    embed = discord.Embed(
+        title = "Changed Channel",
+        color = discord.Color.blue()
+    )
+    embed.add_field(name = "", value = f"Channel for daily messages has been changed to #{bot.channel.name}.")
+
+    await bot.send(embed=embed)
+
+# !settime <time>
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def settime(bot, time):
+    time = (int) (time)
+    if time > 24 or time < 0:
+        await bot.send("Error: Please format time in 24-hour EST\n*Example: 7:00 for 7AM*")
+
+# !dailycollect <enable/disable/status>
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def dailycollect(ctx, msg):
+    if msg.lower() == 'enable':
+        db.setStatus(ctx.guild.id,True)
+        embed = discord.Embed(
+            title = "Enabled Daily Collects",
+            color = discord.Color.blue()
+        )
+        embed.add_field(name = "", value = f"Daily collects have now been enabled.")
+
+        await ctx.send(embed=embed)
+    elif msg.lower() == 'disable':
+        db.setStatus(ctx.guild.id,False)
+        embed = discord.Embed(
+            title = "Disabled Daily Collects",
+            color = discord.Color.blue()
+        )
+        embed.add_field(name = "", value = f"Daily collects have now been disabled.")
+
+        await ctx.send(embed=embed)
+    elif msg.lower() == 'status':
+        enabled = await db.getStatus(ctx.guild.id)
+        status = "Disabled"
+        channel_name = "None"
+        time = "None"
+        if enabled:
+            print("channel enabled")
+            status = "Enabled"
+            channel_id = await db.getChannel(ctx.guild.id)
+            print(channel_id)
+            channel = bot.get_channel((int) (channel_id))
+            if channel and isinstance(channel, discord.TextChannel):
+                channel_name = channel.name
+                print(channel_name)
+
+        embed = discord.Embed(
+            title = "Daily Collects Configuration",
+            color = discord.Color.blue()
+        )
+        embed.add_field(name = "Status", value = f"{status}", inline=False)
+        embed.add_field(name = "Channel", value = f"#{channel_name}", inline=False)
+        embed.add_field(name = "Time", value = f"{time}", inline=False)
+
+        print("Sending config")
+        await ctx.send(embed=embed)
+
+    else:
+        embed = discord.Embed(
+            title = "Error",
+            color = discord.Color.red()
+        )
+        embed.add_field(name = "", value = f"Incorrect Syntax.", inline=False)
+        embed.add_field(name = "", value = f"Proper Syntax: !dailycollect <enable/disable>.", inline=False)
+
+        await ctx.send(embed=embed)
+
+
+    
 # Run the bot
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
