@@ -1,18 +1,22 @@
 # The Plan
 
 ## Phase 1 - get it working
-- get daily collects working
-- load all collects into the DB
-- simple commands:
-    - !help - show help
-    - !channel - do in channel to set channel
+~~- get daily collects working~~
+~~- load all collects into the DB~~
+~~- simple commands:~~
+~~    - !help - show help~~
+~~    - !channel - do in channel to set channel~~
 
 ## Phase 2 - per-server implementation
-- store per-server settings such as prefix
+~~- store per-server settings such as prefix~~
 - more commands:
     - !time - set time
     - !toggle - toggle collect of the day
-    - !prefix - set prefix for server
+~~    - !prefix - set prefix for server~~
+
+## Phase 2.5 - Apply for Discord Recognization
+- Privacy Policy
+- Abide by Discord TOS
 
 ## Phase 3 - extra goodies
 - images for embeds
