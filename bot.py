@@ -7,12 +7,9 @@ import discord
 import logging
 import os
 import database as db
-from discord.ext import commands 
-from discord.ext import tasks
+from discord.ext import commands, tasks
+from datetime import time, datetime
 from dotenv import load_dotenv
-from datetime import time
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 # Initialize db
 db.init_db()
@@ -55,7 +52,7 @@ async def on_ready():
     print("Bot is ready to go!")
     for guild in bot.guilds:
         db.ensureGuildExists(guild.id)
-    daily_message.start()
+    daily_message_timer.start()
     print("done!")
 
 @bot.event
@@ -66,53 +63,58 @@ async def on_guild_join(guild):
         print(f'Something went wrong adding server: {guild.id}')
 
 
-# Main Loop for daily collect time
-# @tasks.loop(time=time(hour=20, minute=0, tzinfo=ZoneInfo("America/New_York"))) 
-@tasks.loop(time=time(hour=20, minute=0, tzinfo=ZoneInfo("America/New_York"))) 
-async def daily_message():
+# Main Loop for daily collect time time=time(hour=7, minute=0)
+async def send_daily_message(server_id):
 
-    # Get all servers and channels
-    channels = await db.getChannels()
+    # Check if server has daily message enabled. Stop if not enabled
+    status = await db.getStatus(server_id)
+    if status:
+        channel_id = await db.getChannel(server_id)
 
-    # Send message in each server
-    for server in channels:
+        # Ensure channel exists
+        if channel_id:
+            channel = bot.get_channel(channel_id)
 
-        # Check if server has daily message enabled. Stop if not enabled
-        status = await db.getStatus(server[0])
-        if status:
-            channel_id = server[1]
+            # Double-check bot can send messages in this channel
+            if isinstance(channel, discord.TextChannel): 
 
-            # Ensure channel exists
-            if channel_id:
-                channel = bot.get_channel((int) (channel_id))
+                # Building embed     
+                date = datetime.today().strftime('%m/%d')
+                collect = db.getTodaysCollect()
+                feast = db.getTodaysFeast()
+                color = db.getTodaysColor().lower()     
+                match color:
+                    case "pink":
+                        color = discord.Color.pink()
+                    case "red":
+                        color = discord.Color.red()
+                    case "white":
+                        color = discord.Color.from_rgb(255,255,255)
+                    case "purple":
+                        color = discord.Color.purple()
+                    case _:
+                        color = discord.Color.green()
+                embed = discord.Embed(
+                    title = f'{date} - {feast}',
+                    color = color
+                )
+                embed.add_field(name = '', value = f'{collect}', inline = False)
+                
+                # Send message
+                await channel.send(embed=embed)
 
-                # Double-check bot can send messages in this channel
-                if isinstance(channel, discord.TextChannel): 
+@tasks.loop(minutes=1)
+async def daily_message_timer():
+    now = datetime.now().strftime("%H:%M") # HH:MM format
+    print(f"NOW = {now}")
 
-                    # Building embed     
-                    date = datetime.today().strftime('%m/%d')
-                    collect = db.getTodaysCollect()
-                    feast = db.getTodaysFeast()
-                    color = db.getTodaysColor().lower()     
-                    match color:
-                        case "pink":
-                            color = discord.Color.pink()
-                        case "red":
-                            color = discord.Color.red()
-                        case "white":
-                            color = discord.Color.from_rgb(255,255,255)
-                        case "purple":
-                            color = discord.Color.purple()
-                        case _:
-                            color = discord.Color.green()
-                    embed = discord.Embed(
-                        title = f'{date} - {feast}',
-                        color = color
-                    )
-                    embed.add_field(name = '', value = f'{collect}', inline = False)
-                    
-                    # Send message
-                    await channel.send(embed=embed)
+    times = await db.getTimes()
+    for server_id, time in times:
+        if time and now == time:
+            print("SENDING MESSAGEEEE")
+            await send_daily_message(server_id)
+        else:
+            print("NOT SENDING DA MESSAGE")
 
 
 
@@ -164,9 +166,9 @@ async def setchannel(ctx):
 @commands.has_permissions(administrator=True)
 async def settime(ctx, time):
     time = time.split(":")
-    hr = (int) (time[0])
-    min = (int) (time[1])
-    if hr < 25 and hr > -1 and min > -1 and min < 60:
+    hr = time[0]
+    min = time[1]
+    if (int) (hr) < 25 and (int) (hr) > -1 and (int) (min) > -1 and (int) (min) < 60:
 
         db.setTime(ctx.guild.id, hr, min)
 
@@ -213,14 +215,15 @@ async def dailycollect(ctx, msg):
         if enabled:
             status = "Enabled"
             channel_id = await db.getChannel(ctx.guild.id)
-            channel = bot.get_channel((int) (channel_id))
-            if channel and isinstance(channel, discord.TextChannel):
-                channel_name = channel.name
-            set_time = await db.getTime(ctx.guild.id)
-            if set_time:
-                if set_time[1] == '0':
-                    set_time[1] = '00'
-                time = f'{set_time[0]}:{set_time[1]} EST'
+            if channel_id:
+                channel = bot.get_channel(channel_id)
+                if channel and isinstance(channel, discord.TextChannel):
+                    channel_name = channel.name
+                set_time = await db.getTime(ctx.guild.id)
+                if set_time:
+                    if set_time[1] == '0':
+                        set_time[1] = '00'
+                    time = f'{set_time[0]}:{set_time[1]} EST'
         
 
         embed = discord.Embed(

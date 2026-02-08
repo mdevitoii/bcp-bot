@@ -90,16 +90,22 @@ def setPrefix(server_id, prefix):
     conn.close()
     print(f"Set prefix to {prefix} for server {server_id}")
 
+async def getTimes():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT server_id, time FROM servers")
+    times = c.fetchall()
+    conn.close()
+    return times
+
 async def getTime(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT time FROM servers WHERE server_id = ?", (server_id,))
     time = c.fetchone()
-    print(time)
+    conn.close()
     if time[0]:
-        time = time[0].split(":")
-        conn.close()
-        return time
+        return time[0]
     else:
         return None
 
@@ -126,7 +132,10 @@ async def getChannel(server_id):
     c.execute("SELECT channel FROM servers WHERE server_id = ?", (server_id,))
     channel = c.fetchone()
     conn.close()
-    return channel[0]
+    if channel[0]:
+        return (int) (channel[0])
+    else:
+        return None
 
 def setChannel(server_id, channel_id):
     conn = sqlite3.connect(DB_PATH)
