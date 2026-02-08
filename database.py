@@ -95,9 +95,13 @@ async def getTime(server_id):
     c = conn.cursor()
     c.execute("SELECT time FROM servers WHERE server_id = ?", (server_id,))
     time = c.fetchone()
-    time = time[0].split(":")
-    conn.close()
-    return time
+    print(time)
+    if time[0]:
+        time = time[0].split(":")
+        conn.close()
+        return time
+    else:
+        return None
 
 def setTime(server_id, hour, minute):
     time = f"{hour}:{minute}"
