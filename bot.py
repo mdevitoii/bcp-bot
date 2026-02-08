@@ -221,9 +221,7 @@ async def dailycollect(ctx, msg):
                     channel_name = channel.name
                 set_time = await db.getTime(ctx.guild.id)
                 if set_time:
-                    if set_time[1] == '0':
-                        set_time[1] = '00'
-                    time = f'{set_time[0]}:{set_time[1]} EST'
+                    time = f'{set_time} EST'
         
 
         embed = discord.Embed(
