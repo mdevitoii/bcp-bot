@@ -165,22 +165,30 @@ async def setchannel(ctx):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def settime(ctx, time):
-    time = time.split(":")
-    hr = time[0]
-    min = time[1]
-    if (int) (hr) < 25 and (int) (hr) > -1 and (int) (min) > -1 and (int) (min) < 60:
+    try:
+        time = time.split(":")
+        hr = time[0]
+        min = time[1]
+        if (int) (hr) < 25 and (int) (hr) > -1 and (int) (min) > -1 and (int) (min) < 60:
 
-        db.setTime(ctx.guild.id, hr, min)
+            if (int) (hr) < 10 and hr[0] != "0":
+                hr = "0" + time[0]
+            if (int) (min) < 10 and min[0] != "0":
+                min = "0" + time[1]
 
-        embed = discord.Embed(
-            title = "Changed Time",
-            color = discord.Color.blue()
-        )
-        embed.add_field(name = "", value = f"Time for daily messages has been changed to {hr}:{min} EST.")
+            db.setTime(ctx.guild.id, hr, min)
 
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("Error: Please format time in 24-hour EST\n*Example: 7:00 for 7AM*")
+            embed = discord.Embed(
+                title = "Changed Time",
+                color = discord.Color.blue()
+            )
+            embed.add_field(name = "", value = f"Time for daily messages has been changed to {hr}:{min} EST.")
+
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("`!settime` Error: Please format time in 24-hour EST\n*Example: 7:00 for 7AM*")
+    except:
+        await ctx.send("`!settime` Error: Please format time in 24-hour EST\n*Example: 7:00 for 7AM*")
     
     
 
