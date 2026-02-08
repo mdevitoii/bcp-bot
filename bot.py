@@ -12,6 +12,7 @@ from discord.ext import tasks
 from dotenv import load_dotenv
 from datetime import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # Initialize db
 db.init_db()
@@ -66,8 +67,7 @@ async def on_guild_join(guild):
 
 
 # Main Loop for daily collect time time=time(hour=7, minute=0)
-# Note: Time is in GMT (EST + 5 hours)
-@tasks.loop(time=time(hour=12, minute=0)) 
+@tasks.loop(time=time(hour=20, minute=0, tzinfo=ZoneInfo("America/New_York"))) 
 async def daily_message():
 
     # Get all servers and channels
@@ -147,24 +147,45 @@ async def prefix(ctx, prefix):
 # !setchannel
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def setchannel(bot):
+async def setchannel(ctx):
 
-    db.setChannel(bot.guild.id,bot.channel.id)
+    db.setChannel(ctx.guild.id,ctx.channel.id)
     embed = discord.Embed(
         title = "Changed Channel",
         color = discord.Color.blue()
     )
-    embed.add_field(name = "", value = f"Channel for daily messages has been changed to #{bot.channel.name}.")
+    embed.add_field(name = "", value = f"Channel for daily messages has been changed to #{ctx.channel.name}.")
 
-    await bot.send(embed=embed)
+    await ctx.send(embed=embed)
 
 # !settime <time>
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def settime(bot, time):
-    time = (int) (time)
-    if time > 24 or time < 0:
-        await bot.send("Error: Please format time in 24-hour EST\n*Example: 7:00 for 7AM*")
+async def settime(ctx, time):
+    time.split(":")
+    hr = (int) (time[0])
+    min = (int) (time[1])
+    if hr < 25 and hr > -1 and min > -1 and min < 60:
+        print("SETTING TIMEEEE")
+
+        # Adjusting for timezone
+        hr += 5
+
+
+        db.setTime(ctx.guild.id, hr, min)
+
+        embed = discord.Embed(
+            title = "Changed Time",
+            color = discord.Color.blue()
+        )
+        embed.add_field(name = "", value = f"Time for daily messages has been changed to {hr}:{min} EST.")
+
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("Error: Please format time in 24-hour EST\n*Example: 7:00 for 7AM*")
+    
+    
+
 
 # !dailycollect <enable/disable/status>
 @bot.command()
