@@ -95,8 +95,17 @@ def getTime(server_id):
     c = conn.cursor()
     c.execute("SELECT time FROM servers WHERE server_id = ?", (server_id,))
     time = c.fetchone()
+    time.split(":")
     conn.close()
     return time
+
+def setTime(server_id, hour, minute):
+    time = f"{hour}:{minute}"
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE servers SET time = ? WHERE server_id = ?", (time,server_id))
+    conn.close()
+    print(f"Set time to {time} EST for server {server_id}")
 
 async def getChannels():
     conn = sqlite3.connect(DB_PATH)
