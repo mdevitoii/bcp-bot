@@ -11,7 +11,7 @@
 ~~- store per-server settings such as prefix~~
 - more commands:
     - !time - set time
-    - !toggle - toggle collect of the day
+~~    - !toggle - toggle collect of the day~~
 ~~    - !prefix - set prefix for server~~
 
 ## Phase 2.5 - Apply for Discord Recognization
