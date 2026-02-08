@@ -66,8 +66,9 @@ async def on_guild_join(guild):
         print(f'Something went wrong adding server: {guild.id}')
 
 
-# Main Loop for daily collect time time=time(hour=7, minute=0)
-@tasks.loop(time=time(hour=20, minute=0, tzinfo=ZoneInfo("America/New_York"))) 
+# Main Loop for daily collect time
+# @tasks.loop(time=time(hour=20, minute=0, tzinfo=ZoneInfo("America/New_York"))) 
+@tasks.loop(time=time(hour=20, minute=0)) 
 async def daily_message():
 
     # Get all servers and channels
@@ -162,15 +163,10 @@ async def setchannel(ctx):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def settime(ctx, time):
-    time.split(":")
+    time = time.split(":")
     hr = (int) (time[0])
     min = (int) (time[1])
     if hr < 25 and hr > -1 and min > -1 and min < 60:
-        print("SETTING TIMEEEE")
-
-        # Adjusting for timezone
-        hr += 5
-
 
         db.setTime(ctx.guild.id, hr, min)
 
@@ -215,14 +211,17 @@ async def dailycollect(ctx, msg):
         channel_name = "None"
         time = "None"
         if enabled:
-            print("channel enabled")
             status = "Enabled"
             channel_id = await db.getChannel(ctx.guild.id)
-            print(channel_id)
             channel = bot.get_channel((int) (channel_id))
             if channel and isinstance(channel, discord.TextChannel):
                 channel_name = channel.name
-                print(channel_name)
+            set_time = await db.getTime(ctx.guild.id)
+            if set_time:
+                if set_time[1] == '0':
+                    set_time[1] = '00'
+                time = f'{set_time[0]}:{set_time[1]} EST'
+        
 
         embed = discord.Embed(
             title = "Daily Collects Configuration",
@@ -232,7 +231,6 @@ async def dailycollect(ctx, msg):
         embed.add_field(name = "Channel", value = f"#{channel_name}", inline=False)
         embed.add_field(name = "Time", value = f"{time}", inline=False)
 
-        print("Sending config")
         await ctx.send(embed=embed)
 
     else:
