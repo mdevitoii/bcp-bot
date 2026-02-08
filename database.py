@@ -90,12 +90,12 @@ def setPrefix(server_id, prefix):
     conn.close()
     print(f"Set prefix to {prefix} for server {server_id}")
 
-def getTime(server_id):
+async def getTime(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT time FROM servers WHERE server_id = ?", (server_id,))
     time = c.fetchone()
-    time.split(":")
+    time = time[0].split(":")
     conn.close()
     return time
 
@@ -104,6 +104,7 @@ def setTime(server_id, hour, minute):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("UPDATE servers SET time = ? WHERE server_id = ?", (time,server_id))
+    conn.commit()
     conn.close()
     print(f"Set time to {time} EST for server {server_id}")
 
