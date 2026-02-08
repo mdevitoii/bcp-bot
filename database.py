@@ -2,14 +2,21 @@
 # Author: Michael DeVito
 
 import csv
+import os
 import sqlite3
 from pathlib import Path
 from datetime import date
+from dotenv import load_dotenv
 
-DB_PATH = Path("database/main.db")
+load_dotenv()
+DB_PATH = Path((str) (os.getenv('DB_PATH')))
+if not DB_PATH:
+    raise ValueError("DB_PATH not set in .env file.")
 
+# Initialize the DB if it doesn't exist
 def init_db():
     conn = sqlite3.connect(DB_PATH)
+    print("DB initialized")
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS collects
                     (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT)''')
@@ -25,6 +32,7 @@ def init_db():
         seed_db()
         conn.close()
 
+# Seed the DB if it does not contain collects
 def seed_db():
     CSV = Path("database/all_collects.csv")
     DB_PATH = Path("database/main.db")
@@ -54,7 +62,8 @@ def seed_db():
     conn.close()
     print(f"Inserted {len(rows)} rows into database")
 
-def ensureGuildExists(server_id: int):
+# Ensure that a guild exists within the DB
+def ensureGuildExists(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT prefix FROM servers WHERE server_id = ?", (server_id,))
@@ -66,6 +75,7 @@ def ensureGuildExists(server_id: int):
     else:
         addServer(server_id)
 
+# Bot is added to new server, add server to DB
 def addServer(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -74,6 +84,7 @@ def addServer(server_id):
     conn.close()
     print(f"Added new server: {server_id}")
 
+# Get per-server prefix
 async def getPrefix(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -82,6 +93,7 @@ async def getPrefix(server_id):
     conn.close()
     return prefix[0]
 
+# Set per-server prefix
 def setPrefix(server_id, prefix):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -90,6 +102,7 @@ def setPrefix(server_id, prefix):
     conn.close()
     print(f"Set prefix to {prefix} for server {server_id}")
 
+# Get all servers and respective times for daily collect
 async def getTimes():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -98,6 +111,7 @@ async def getTimes():
     conn.close()
     return times
 
+# Get a specific server's time for daily collect
 async def getTime(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -109,6 +123,7 @@ async def getTime(server_id):
     else:
         return None
 
+# Set a specific server's time for daily collect
 def setTime(server_id, hour, minute):
     time = f"{hour}:{minute}"
     conn = sqlite3.connect(DB_PATH)
@@ -118,6 +133,7 @@ def setTime(server_id, hour, minute):
     conn.close()
     print(f"Set time to {time} EST for server {server_id}")
 
+# Get all servers and respective channels for daily collect
 async def getChannels():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -126,6 +142,7 @@ async def getChannels():
     conn.close()
     return channels
 
+# Get a specific server's channel for daily collect
 async def getChannel(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -137,6 +154,7 @@ async def getChannel(server_id):
     else:
         return None
 
+# Set a specific server's channel for daily collect
 def setChannel(server_id, channel_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -145,6 +163,7 @@ def setChannel(server_id, channel_id):
     conn.close()
     print(f"Set channel to {channel_id} for server {server_id}")
 
+# Get a specific server's status for daily collect
 async def getStatus(server_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -155,6 +174,7 @@ async def getStatus(server_id):
     else:
         return False
 
+# Set a specific server's status for daily collect
 def setStatus(server_id, status):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -167,7 +187,8 @@ def setStatus(server_id, status):
     print(f"Set status to {enabled} for server {server_id}")
     
 
-# Functions for daily collect
+''' Functions used for compiling daily collect '''
+# Get today's collect
 def getTodaysCollect():
     today = str(date.today())[-5:] # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
@@ -177,6 +198,7 @@ def getTodaysCollect():
     conn.close()
     return collect[0]
 
+# Get today's feast day
 def getTodaysFeast():
     today = str(date.today())[-5:] # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
@@ -186,6 +208,7 @@ def getTodaysFeast():
     conn.close()
     return feast[0]
 
+# Get today's season color
 def getTodaysColor():
     today = str(date.today())[-5:] # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
