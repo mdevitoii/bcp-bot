@@ -12,6 +12,7 @@ from datetime import time, datetime
 from dotenv import load_dotenv
 
 # Initialize db
+print(f"Starting bcp-bot at {datetime.now().strftime("%H:%M")}")
 db.init_db()
 
 # Load .env file variables
@@ -49,11 +50,10 @@ bot.remove_command('help')
 # Handling Events
 @bot.event
 async def on_ready():
-    print("Bot is ready to go!")
     for guild in bot.guilds:
         db.ensureGuildExists(guild.id)
     daily_message_timer.start()
-    print("done!")
+    print("Bot is ready to go!")
 
 @bot.event
 async def on_guild_join(guild):
@@ -106,16 +106,11 @@ async def send_daily_message(server_id):
 @tasks.loop(minutes=1)
 async def daily_message_timer():
     now = datetime.now().strftime("%H:%M") # HH:MM format
-    print(f"NOW = {now}")
 
     times = await db.getTimes()
     for server_id, time in times:
         if time and now == time:
-            print("SENDING MESSAGEEEE")
             await send_daily_message(server_id)
-        else:
-            print("NOT SENDING DA MESSAGE")
-
 
 
 ''' Commands '''
