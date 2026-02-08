@@ -29,3 +29,5 @@
 ## Phase 4 - if it gets this far
 - automate DB process (getting collects from website)
 - simplify DB
+- !morningprayer - dms you the entirety of morning prayer for the day
+- !eveningprayer - dms you the entirety of evening prayer for the day
