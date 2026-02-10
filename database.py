@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 DB_PATH = Path((str) (os.getenv('DB_PATH')))
-print(f"DB = {DB_PATH}")
 if not DB_PATH:
     raise ValueError("DB_PATH not set in .env file.")
 
@@ -194,17 +193,12 @@ def setStatus(server_id, status):
 ''' Functions used for compiling daily collect '''
 # Get today's collect
 def getTodaysCollect():
-    print("GETTING TODAY COLLECT")
     today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
-    print(today)
     conn = sqlite3.connect(DB_PATH)
-    print(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT collect FROM collects WHERE date = ?", (today,))
-    collect = c.fetchall()
+    collect = c.fetchone()
     conn.close()
-    print(collect)
-    print("DID THE SQL STUFF")
     return collect[0]
     
 
