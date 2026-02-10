@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 DB_PATH = Path((str) (os.getenv('DB_PATH')))
+print(f"DB = {DB_PATH}")
 if not DB_PATH:
     raise ValueError("DB_PATH not set in .env file.")
 
