@@ -13,7 +13,10 @@ from dotenv import load_dotenv
 
 # Initialize db
 print(f"Starting bcp-bot at {datetime.now().strftime("%H:%M")}")
+
+# Insert arguments for initializing DB into function
 db.init_db()
+db.seed_db() # one-time
 
 # Load .env file variables
 load_dotenv()
@@ -64,23 +67,18 @@ async def on_guild_join(guild):
 
 
 # Main Loop for daily collect time time=time(hour=7, minute=0)
-async def send_daily_message(server_id):
+async def send_daily_collect(channel_id):
+    # Ensure channel exists
+    if channel_id:
+        channel = bot.get_channel(channel_id)
 
-    # Check if server has daily message enabled. Stop if not enabled
-    status = await db.getStatus(server_id)
-    if status:
-        channel_id = await db.getChannel(server_id)
+        # Double-check bot can send messages in this channel
+        if isinstance(channel, discord.TextChannel): 
 
-        # Ensure channel exists
-        if channel_id:
-            channel = bot.get_channel(channel_id)
-
-            # Double-check bot can send messages in this channel
-            if isinstance(channel, discord.TextChannel): 
-
+            try:
                 # Building embed     
                 date = datetime.today().strftime('%m/%d')
-                collect = db.getTodaysCollect()
+                collect = db.getTodaysCollect() # error is getting thrown here
                 feast = db.getTodaysFeast()
                 color = db.getTodaysColor().lower()     
                 match color:
@@ -102,6 +100,9 @@ async def send_daily_message(server_id):
                 
                 # Send message
                 await channel.send(embed=embed)
+            except:
+                user = await bot.fetch_user(614461308850405389) # ping @mr_minechael
+                await channel.send(f"Error: Today's collect could not be found. Blame <@{user.id}>!")
 
 @tasks.loop(minutes=1)
 async def daily_message_timer():
@@ -110,7 +111,11 @@ async def daily_message_timer():
     times = await db.getTimes()
     for server_id, time in times:
         if time and now == time:
-            await send_daily_message(server_id)
+            status = await db.getStatus(server_id)
+            if status:
+                channel_id = await db.getChannel(server_id)
+                print(f"Sending daily collect in server {server_id} at {now} EST.")
+                await send_daily_collect(channel_id)
 
 
 ''' Commands '''
@@ -191,61 +196,64 @@ async def settime(ctx, time):
 # !dailycollect <enable/disable/status>
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def dailycollect(ctx, msg):
-    if msg.lower() == 'enable':
-        db.setStatus(ctx.guild.id,True)
-        embed = discord.Embed(
-            title = "Enabled Daily Collects",
-            color = discord.Color.blue()
-        )
-        embed.add_field(name = "", value = f"Daily collects have now been enabled.")
+async def dailycollect(ctx, msg: str | None = None): # makes msg optional
+    if msg:
+        if msg.lower() == 'enable':
+            db.setStatus(ctx.guild.id,True)
+            embed = discord.Embed(
+                title = "Enabled Daily Collects",
+                color = discord.Color.blue()
+            )
+            embed.add_field(name = "", value = f"Daily collects have now been enabled.")
 
-        await ctx.send(embed=embed)
-    elif msg.lower() == 'disable':
-        db.setStatus(ctx.guild.id,False)
-        embed = discord.Embed(
-            title = "Disabled Daily Collects",
-            color = discord.Color.blue()
-        )
-        embed.add_field(name = "", value = f"Daily collects have now been disabled.")
+            await ctx.send(embed=embed)
+        elif msg.lower() == 'disable':
+            db.setStatus(ctx.guild.id,False)
+            embed = discord.Embed(
+                title = "Disabled Daily Collects",
+                color = discord.Color.blue()
+            )
+            embed.add_field(name = "", value = f"Daily collects have now been disabled.")
 
-        await ctx.send(embed=embed)
-    elif msg.lower() == 'status':
-        enabled = await db.getStatus(ctx.guild.id)
-        status = "Disabled"
-        channel_name = "None"
-        time = "None"
-        if enabled:
-            status = "Enabled"
-            channel_id = await db.getChannel(ctx.guild.id)
-            if channel_id:
-                channel = bot.get_channel(channel_id)
-                if channel and isinstance(channel, discord.TextChannel):
-                    channel_name = channel.name
-                set_time = await db.getTime(ctx.guild.id)
-                if set_time:
-                    time = f'{set_time} EST'
-        
+            await ctx.send(embed=embed)
+        elif msg.lower() == 'status':
+            enabled = await db.getStatus(ctx.guild.id)
+            status = "Disabled"
+            channel_name = "None"
+            time = "None"
+            if enabled:
+                status = "Enabled"
+                channel_id = await db.getChannel(ctx.guild.id)
+                if channel_id:
+                    channel = bot.get_channel(channel_id)
+                    if channel and isinstance(channel, discord.TextChannel):
+                        channel_name = channel.name
+                    set_time = await db.getTime(ctx.guild.id)
+                    if set_time:
+                        time = f'{set_time} EST'
+            
 
-        embed = discord.Embed(
-            title = "Daily Collects Configuration",
-            color = discord.Color.blue()
-        )
-        embed.add_field(name = "Status", value = f"{status}", inline=False)
-        embed.add_field(name = "Channel", value = f"#{channel_name}", inline=False)
-        embed.add_field(name = "Time", value = f"{time}", inline=False)
+            embed = discord.Embed(
+                title = "Daily Collects Configuration",
+                color = discord.Color.blue()
+            )
+            embed.add_field(name = "Status", value = f"{status}", inline=False)
+            embed.add_field(name = "Channel", value = f"#{channel_name}", inline=False)
+            embed.add_field(name = "Time", value = f"{time}", inline=False)
 
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
 
-    else:
-        embed = discord.Embed(
-            title = "Error",
-            color = discord.Color.red()
-        )
-        embed.add_field(name = "", value = f"Incorrect Syntax.", inline=False)
-        embed.add_field(name = "", value = f"Proper Syntax: !dailycollect <enable/disable>.", inline=False)
+        else:
+            embed = discord.Embed(
+                title = "Error",
+                color = discord.Color.red()
+            )
+            embed.add_field(name = "", value = f"Incorrect Syntax.", inline=False)
+            embed.add_field(name = "", value = f"Proper Syntax: !dailycollect <enable/disable>.", inline=False)
 
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
+    elif msg == None:
+        await send_daily_collect(ctx.channel.id)
 
 
     
