@@ -197,9 +197,10 @@ def getTodaysCollect():
     today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
     print(today)
     conn = sqlite3.connect(DB_PATH)
+    print(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT collect FROM collects WHERE date = ?", (today,))
-    collect = c.fetchone()
+    collect = c.fetchall()
     conn.close()
     print(collect)
     print("DID THE SQL STUFF")
