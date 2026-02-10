@@ -16,7 +16,6 @@ print(f"Starting bcp-bot at {datetime.now().strftime("%H:%M")}")
 
 # Insert arguments for initializing DB into function
 db.init_db()
-db.seed_db() # one-time
 
 # Load .env file variables
 load_dotenv()
@@ -75,7 +74,7 @@ async def send_daily_collect(channel_id):
         # Double-check bot can send messages in this channel
         if isinstance(channel, discord.TextChannel): 
 
-            try:
+            #try:
                 # Building embed     
                 date = datetime.today().strftime('%m/%d')
                 collect = db.getTodaysCollect() # error is getting thrown here
@@ -100,9 +99,9 @@ async def send_daily_collect(channel_id):
                 
                 # Send message
                 await channel.send(embed=embed)
-            except:
-                user = await bot.fetch_user(614461308850405389) # ping @mr_minechael
-                await channel.send(f"Error: Today's collect could not be found. Blame <@{user.id}>!")
+            #except:
+                #user = await bot.fetch_user(614461308850405389) # ping @mr_minechael
+                #await channel.send(f"Error: Today's collect could not be found. Blame <@{user.id}>!")
 
 @tasks.loop(minutes=1)
 async def daily_message_timer():
