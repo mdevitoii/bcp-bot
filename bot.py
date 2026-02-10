@@ -78,6 +78,7 @@ async def send_daily_collect(channel_id):
                 # Building embed     
                 date = datetime.today().strftime('%m/%d')
                 collect = db.getTodaysCollect() # error is getting thrown here
+                print("GOT DA COLLECT")
                 feast = db.getTodaysFeast()
                 color = db.getTodaysColor().lower()     
                 match color:
@@ -252,6 +253,7 @@ async def dailycollect(ctx, msg: str | None = None): # makes msg optional
 
             await ctx.send(embed=embed)
     elif msg == None:
+        print("GETTING DAILY COLLECT NO ARGS")
         await send_daily_collect(ctx.channel.id)
 
 

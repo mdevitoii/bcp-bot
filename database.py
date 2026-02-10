@@ -193,12 +193,14 @@ def setStatus(server_id, status):
 ''' Functions used for compiling daily collect '''
 # Get today's collect
 def getTodaysCollect():
+    print("GETTING TODAY COLLECT")
     today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT collect FROM collects WHERE date = ?", (today,))
     collect = c.fetchone()
     conn.close()
+    print("DID THE SQL STUFF")
     return collect[0]
     
 
