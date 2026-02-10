@@ -5,7 +5,7 @@ import csv
 import os
 import sqlite3
 from pathlib import Path
-from datetime import date
+from datetime import date, datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -57,6 +57,9 @@ def seed_db():
     # Add rows to DB
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    c.execute("DROP TABLE IF EXISTS collects")
+    c.execute('''CREATE TABLE IF NOT EXISTS collects
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT)''')
     c.executemany('INSERT INTO collects (date, collect, feast, color) VALUES (?, ?, ?, ?)', rows)
     conn.commit()
     conn.close()
@@ -190,17 +193,18 @@ def setStatus(server_id, status):
 ''' Functions used for compiling daily collect '''
 # Get today's collect
 def getTodaysCollect():
-    today = str(date.today())[-5:] # gets today in MM-DD format
+    today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT collect FROM collects WHERE date = ?", (today,))
     collect = c.fetchone()
     conn.close()
     return collect[0]
+    
 
 # Get today's feast day
 def getTodaysFeast():
-    today = str(date.today())[-5:] # gets today in MM-DD format
+    today = datetime.today().strftime('%m-%d') # gets today in MM-DD format    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT feast FROM collects WHERE date = ?", (today,))
@@ -210,7 +214,7 @@ def getTodaysFeast():
 
 # Get today's season color
 def getTodaysColor():
-    today = str(date.today())[-5:] # gets today in MM-DD format
+    today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT color FROM collects WHERE date = ?", (today,))
