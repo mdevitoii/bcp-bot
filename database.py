@@ -200,6 +200,7 @@ def getTodaysCollect():
     c.execute("SELECT collect FROM collects WHERE date = ?", (today,))
     collect = c.fetchone()
     conn.close()
+    print(collect)
     print("DID THE SQL STUFF")
     return collect[0]
     
