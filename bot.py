@@ -74,7 +74,7 @@ async def send_daily_collect(channel_id):
         # Double-check bot can send messages in this channel
         if isinstance(channel, discord.TextChannel): 
 
-            #try:
+            try:
                 # Building embed     
                 date = datetime.today().strftime('%m/%d')
                 feast = db.getTodaysFeast()
@@ -108,13 +108,13 @@ async def send_daily_collect(channel_id):
                     image = db.getTodaysImage()
                     caption = db.getTodaysCaption()
                     embed.set_image(url=image)
-                    embed.set_footer(text=f"**Image Caption:** {caption}")
+                    embed.set_footer(text=f"{caption}")
                 
                 # Send message
                 await channel.send(embed=embed)
-            #except:
-                #user = await bot.fetch_user(614461308850405389) # ping @mr_minechael
-                #await channel.send(f"Error: Today's collect could not be found. Blame <@{user.id}>!")
+            except:
+                user = await bot.fetch_user(614461308850405389) # ping @mr_minechael
+                await channel.send(f"Error: Today's collect could not be found. Blame <@{user.id}>!")
 
 @tasks.loop(minutes=1)
 async def daily_message_timer():
