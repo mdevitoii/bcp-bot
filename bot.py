@@ -77,9 +77,8 @@ async def send_daily_collect(channel_id):
             #try:
                 # Building embed     
                 date = datetime.today().strftime('%m/%d')
-                collect = db.getTodaysCollect() # error is getting thrown here
                 feast = db.getTodaysFeast()
-                color = db.getTodaysColor().lower()     
+                color = db.getTodaysColor().lower()   
                 match color:
                     case "pink":
                         color = discord.Color.pink()
@@ -95,7 +94,21 @@ async def send_daily_collect(channel_id):
                     title = f'{date} - {feast}',
                     color = color
                 )
-                embed.add_field(name = '', value = f'{collect}', inline = False)
+
+                collect = db.getTodaysCollect()
+                if "*and*" in collect:
+                    collect = collect.split('*and*')
+
+                    for text in collect:
+                        embed.add_field(name = '', value=text, inline = False)
+                else:
+                    embed.add_field(name = '', value=collect, inline = False)
+
+                if (db.getTodaysImage()):
+                    image = db.getTodaysImage()
+                    caption = db.getTodaysCaption()
+                    embed.set_image(url=image)
+                    embed.set_footer(text=f"**Image Caption:** {caption}")
                 
                 # Send message
                 await channel.send(embed=embed)
@@ -252,7 +265,6 @@ async def dailycollect(ctx, msg: str | None = None): # makes msg optional
 
             await ctx.send(embed=embed)
     elif msg == None:
-        print("GETTING DAILY COLLECT NO ARGS")
         await send_daily_collect(ctx.channel.id)
 
 
