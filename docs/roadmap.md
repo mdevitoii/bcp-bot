@@ -14,13 +14,9 @@
 ~~    - !toggle - toggle collect of the day~~
 ~~    - !prefix - set prefix for server~~
 
-## Phase 2.5 - Apply for Discord Recognization
-- Privacy Policy
-- Abide by Discord TOS
-
 ## Phase 3 - extra goodies
-- images for embeds
-- handle multiple collects per day
+~~- images for embeds~~
+~~- handle multiple collects per day~~
 - more commands:
     - !random - gives random verse
     - !anglican - what is anglicanism?
