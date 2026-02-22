@@ -18,8 +18,9 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     print("DB initialized")
     c = conn.cursor()
+    c.execute('''DROP TABLE IF EXISTS collects''')
     c.execute('''CREATE TABLE IF NOT EXISTS collects
-                    (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT)''')
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT, image TEXT, caption TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS servers
                 (server_id INTEGER PRIMARY KEY, prefix TEXT, time TEXT, channel INTEGER, enabled INTEGER)''')
     conn.commit()
@@ -51,16 +52,18 @@ def seed_db():
             collect = row.get("Collect","").strip()
             feast = row.get("Feast","").strip()
             color = row.get("Color","").strip()
+            image = row.get("Image","").strip()
+            caption = row.get("Caption","").strip()
 
-            rows.append((date, collect, feast, color))
+            rows.append((date, collect, feast, color,image,caption))
 
     # Add rows to DB
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DROP TABLE IF EXISTS collects")
     c.execute('''CREATE TABLE IF NOT EXISTS collects
-                    (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT)''')
-    c.executemany('INSERT INTO collects (date, collect, feast, color) VALUES (?, ?, ?, ?)', rows)
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT, image TEXT, caption TEXT)''')
+    c.executemany('INSERT INTO collects (date, collect, feast, color, image, caption) VALUES (?, ?, ?, ?, ?, ?)', rows)
     conn.commit()
     conn.close()
     print(f"Inserted {len(rows)} rows into database")
@@ -221,3 +224,29 @@ def getTodaysColor():
     color = c.fetchone()
     conn.close()
     return color[0]
+
+# Get today's image (if exists)
+def getTodaysImage():
+    # today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
+    today = "04-12"
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT image FROM collects WHERE date = ?", (today,))
+    image = c.fetchone()
+    conn.close()
+    if image[0] == " ":
+        return None
+    return image[0]
+
+# Get today's caption (if exists)
+def getTodaysCaption():
+    # today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
+    today = "04-12"
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT caption FROM collects WHERE date = ?", (today,))
+    caption = c.fetchone()
+    conn.close()
+    if caption[0] == " ":
+        return None
+    return caption[0]
