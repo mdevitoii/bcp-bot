@@ -227,8 +227,7 @@ def getTodaysColor():
 
 # Get today's image (if exists)
 def getTodaysImage():
-    # today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
-    today = "04-12"
+    today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT image FROM collects WHERE date = ?", (today,))
@@ -240,8 +239,7 @@ def getTodaysImage():
 
 # Get today's caption (if exists)
 def getTodaysCaption():
-    # today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
-    today = "04-12"
+    today = datetime.today().strftime('%m-%d') # gets today in MM-DD format
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT caption FROM collects WHERE date = ?", (today,))
