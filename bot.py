@@ -8,7 +8,7 @@ import logging
 import os
 import database as db
 from discord.ext import commands, tasks
-from datetime import time, datetime
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Initialize db
@@ -24,7 +24,7 @@ if not token:
     raise ValueError("DISCORD_TOKEN not set in .env file.")
 
 # Basic Logging
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+logging.basicConfig(filename='discord.log', level=logging.INFO, filemode='w')
 
 # Set up permissions
 intents = discord.Intents.default()
@@ -45,11 +45,10 @@ async def get_prefix(bot, message):
     return commands.when_mentioned_or(p)(bot, message)
 
 # Set up bot with command prefix
-bot = commands.Bot(command_prefix=get_prefix, intents=intents)
-bot.remove_command('help')
+bot = discord.Bot(command_prefix=get_prefix, intents=intents)
 
 ''' All Events '''
-# Handling Events
+# Handling Bot Start
 @bot.event
 async def on_ready():
     for guild in bot.guilds:
@@ -57,6 +56,7 @@ async def on_ready():
     daily_message_timer.start()
     print("Bot is ready to go!")
 
+# Handles guild join
 @bot.event
 async def on_guild_join(guild):
     try:
@@ -81,7 +81,7 @@ async def send_daily_collect(channel_id):
                 color = db.getTodaysColor().lower()   
                 match color:
                     case "pink":
-                        color = discord.Color.pink()
+                        color = discord.Color.nitro_pink()
                     case "red":
                         color = discord.Color.red()
                     case "white":
@@ -132,8 +132,8 @@ async def daily_message_timer():
 
 ''' Commands '''
 # !help
-@bot.command()
-async def help(ctx):
+@bot.command(name="help", description="Shows Information and Commands")
+async def help(interaction: discord.Interaction):
     embed = discord.Embed(    
         title = "List of Commands",
         color = discord.Color.blue()
@@ -143,7 +143,7 @@ async def help(ctx):
     embed.add_field(name = "settime", value = "Sets the time for daily messages.", inline = False)
     embed.add_field(name = "prefix <prefix>", value = "Sets the bot's prefix for commands.", inline = False)
 
-    await ctx.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 # !prefix <prefix>
 @bot.command()
@@ -270,4 +270,4 @@ async def dailycollect(ctx, msg: str | None = None): # makes msg optional
 
     
 # Run the bot
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+bot.run(token)
