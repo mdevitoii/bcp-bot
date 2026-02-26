@@ -145,8 +145,10 @@ async def help(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
-# !prefix <prefix>
-@bot.command()
+# !configure command group
+configure = bot.create_group("configure", "Edit bot configuration")
+
+@configure.command()
 @commands.has_permissions(administrator=True) # only admin can use this
 async def prefix(ctx, prefix):
 
@@ -157,12 +159,11 @@ async def prefix(ctx, prefix):
     )
     embed.add_field(name = "", value = f"Prefix has been changed to {prefix}")
 
-    await ctx.send(embed=embed)
+    await ctx.respond(embed=embed)
 
-# !setchannel
-@bot.command()
+@configure.command()
 @commands.has_permissions(administrator=True)
-async def setchannel(ctx):
+async def channel(ctx):
 
     db.setChannel(ctx.guild.id,ctx.channel.id)
     embed = discord.Embed(
@@ -171,12 +172,11 @@ async def setchannel(ctx):
     )
     embed.add_field(name = "", value = f"Channel for daily messages has been changed to #{ctx.channel.name}.")
 
-    await ctx.send(embed=embed)
+    await ctx.respond(embed=embed)
 
-# !settime <time>
-@bot.command()
+@configure.command()
 @commands.has_permissions(administrator=True)
-async def settime(ctx, time):
+async def time(ctx, time):
     try:
         time = time.split(":")
         hr = time[0]
