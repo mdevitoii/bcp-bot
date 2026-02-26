@@ -20,13 +20,13 @@ Future Additions:
 
 # Commands
 
-**`!help`**
+**`/help`**
 - Displays commands and their syntax
-- Usage: `!help`
+- Usage: `/help`
 
-**`!dailycollect`**
+**`/dailycollect`**
 - Displays information about daily collects, as well as enable/disable daily collects
-- Usage: `!dailycollect <enable/disable/status>`
+- Usage: `/dailycollect <enable/disable/status>`
 
 **`!setchannel`**
 - Sets the channel for collect of the day as the current channel
@@ -39,3 +39,17 @@ Future Additions:
 **`!prefix`**
 - Sets the prefix for the server. Default is '!'
 - Usage: `!prefix <prefix>`
+
+
+NEW COMMANDS:
+
+- /help
+- /config
+    - daily-collect
+        - status
+        - enable
+        - disable
+        - time
+        - channel
+    - prefix
+- /dailycollect
