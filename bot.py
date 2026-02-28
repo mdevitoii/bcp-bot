@@ -265,35 +265,33 @@ async def dailycollect(ctx):
     await send_daily_collect(ctx.channel.id)
 
 # !creed command 
-@bot.command(name="creed", description="Get a specific creed")
-@option("Creed", description="Choose a Creed", choices=["The Nicene Creed", "The Apostle's Creed", "The Athanasian Creed"])
-async def creed(ctx, option:str):
 
-    response = db.getCreed(option)
+@bot.slash_command(name="creed", description="Get a specific creed")
+@option("creed", description="Choose a Creed", choices=["The Nicene Creed", "The Apostle's Creed", "The Athanasian Creed"])
+async def creed(ctx, creed:str):
+
+    response = db.getCreed(creed)
     if response:
         version = response[0]
-        creed = response[1]
-        print(version)
-        print(creed)
+        text = response[1]
                 
         embed = discord.Embed(    
-            title = option,
+            title = creed,
             color = discord.Color.blue()
         )
-        if "*/n*" in creed:
-            creed = creed.split('*/n*')
+        if "*/n*" in text:
+            text = text.split('*/n*')
 
-            for text in creed:
-                embed.add_field(name = '', value=text, inline = False)
+            for t in text:
+                embed.add_field(name = '', value=t, inline = False)
         else:
-            embed.add_field(name = '', value=creed, inline = False)
+            embed.add_field(name = '', value=text, inline = False)
 
-        embed.set_footer(
-            text=version,
-        )
-
-
-    await ctx.response.send_message(embed=embed)
+        embed.set_footer(text=version)
+        await ctx.respond(embed=embed)
+    else:
+        await ctx.respond("Creed was not found.")
+    
 
 
 
