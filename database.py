@@ -5,7 +5,7 @@ import csv
 import os
 import sqlite3
 from pathlib import Path
-from datetime import date, datetime
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -124,6 +124,17 @@ def addServer(server_id):
     conn.close()
     print(f"Added new server: {server_id}")
 
+# Bot is removed from server, remove server from DB
+def removeServer(server_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
+    conn.commit()
+    conn.close()
+    print(f"Removed server: {server_id}")
+
+
+''' Functions for Server Config '''
 # Get per-server prefix
 async def getPrefix(server_id):
     conn = sqlite3.connect(DB_PATH)
@@ -238,7 +249,6 @@ def getTodaysCollect():
     conn.close()
     return collect[0]
     
-
 # Get today's feast day
 def getTodaysFeast():
     today = datetime.today().strftime('%m-%d') # gets today in MM-DD format    
@@ -283,6 +293,9 @@ def getTodaysCaption():
         return None
     return caption[0]
 
+
+''' Other Functions for Commands '''
+# Get a creed
 def getCreed(option):
     if option:
         conn = sqlite3.connect(DB_PATH)
