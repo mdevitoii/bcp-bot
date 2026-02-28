@@ -8,6 +8,7 @@ import logging
 import os
 import database as db
 from discord.ext import commands, tasks
+from discord import option
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -134,7 +135,7 @@ async def daily_message_timer():
 ''' Commands '''
 # !help
 @bot.command(name="help", description="Shows Information and Commands")
-async def help(interaction: discord.Interaction):
+async def help(ctx):
     embed = discord.Embed(    
         title = "List of Commands",
         color = discord.Color.blue()
@@ -144,14 +145,14 @@ async def help(interaction: discord.Interaction):
     embed.add_field(name = "settime", value = "Sets the time for daily messages.", inline = False)
     embed.add_field(name = "prefix <prefix>", value = "Sets the bot's prefix for commands.", inline = False)
 
-    await interaction.response.send_message(embed=embed)
+    await ctx.response.send_message(embed=embed)
 
 # !configure command group
 config = discord.SlashCommandGroup(name="configure", description="Edit bot configuration")
 dailycollectconfig = config.create_subgroup(name="daily-collect", description="Configure daily collect")
 
 @config.command(name="prefix", description="Change the server prefix")
-@commands.has_permissions(administrator=True) # only admin can use this
+@commands.has_permissions(administrator=True)
 async def prefix(ctx, prefix):
 
     db.setPrefix(ctx.guild.id, prefix)
@@ -260,9 +261,39 @@ async def disable(ctx):
 # !dailycollect <enable/disable/status>
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def dailycollect(ctx, msg: str | None = None): # makes msg optional
+async def dailycollect(ctx): 
     await send_daily_collect(ctx.channel.id)
 
+# !creed command 
+@bot.command(name="creed", description="Get a specific creed")
+@option("Creed", description="Choose a Creed", choices=["The Nicene Creed", "The Apostle's Creed", "The Athanasian Creed"])
+async def creed(ctx, option:str):
+
+    response = db.getCreed(option)
+    if response:
+        version = response[0]
+        creed = response[1]
+        print(version)
+        print(creed)
+                
+        embed = discord.Embed(    
+            title = option,
+            color = discord.Color.blue()
+        )
+        if "*/n*" in creed:
+            creed = creed.split('*/n*')
+
+            for text in creed:
+                embed.add_field(name = '', value=text, inline = False)
+        else:
+            embed.add_field(name = '', value=creed, inline = False)
+
+        embed.set_footer(
+            text=version,
+        )
+
+
+    await ctx.response.send_message(embed=embed)
 
 
 
