@@ -14,8 +14,6 @@ from dotenv import load_dotenv
 
 # Initialize db
 print(f"Starting bcp-bot at {datetime.now().strftime("%H:%M")}")
-
-# Insert arguments for initializing DB into function
 db.init_db()
 
 # Load .env file variables
@@ -66,6 +64,12 @@ async def on_guild_join(guild):
     except:
         print(f'Something went wrong adding server: {guild.id}')
 
+@bot.event
+async def on_guild_remove(guild):
+    try:
+        db.removeServer(int(guild.id))
+    except:
+        print(f'Something went wrong removing server: {guild.id}')
 
 # Main Loop for daily collect time time=time(hour=7, minute=0)
 async def send_daily_collect(channel_id):
@@ -133,21 +137,21 @@ async def daily_message_timer():
 
 
 ''' Commands '''
-# !help
-@bot.command(name="help", description="Shows Information and Commands")
+# /help
+@bot.slash_command(name="help", description="Shows Information and Commands")
 async def help(ctx):
     embed = discord.Embed(    
         title = "List of Commands",
         color = discord.Color.blue()
     )
-    embed.add_field(name = "enableCollects", value = "Enables the daily collects feature.", inline = False)
-    embed.add_field(name = "setchannel", value = "Sets the channel to post in.", inline = False)
-    embed.add_field(name = "settime", value = "Sets the time for daily messages.", inline = False)
-    embed.add_field(name = "prefix <prefix>", value = "Sets the bot's prefix for commands.", inline = False)
+    embed.add_field(name = "/config prefix <prefix>", value = "Configure the default prefix for the server (if slash commands are disabled).", inline = False)
+    embed.add_field(name = "/config dailycollect <option>", value = "Configure daily collect information such as channel, time sent, view the current settings, enable, or disable.", inline = False)
+    embed.add_field(name = "/dailycollect", value = "Today's daily collect.", inline = False)
+    embed.add_field(name = "/creed <creed>", value = "Print a specific creed.", inline = False)
 
     await ctx.response.send_message(embed=embed)
 
-# !configure command group
+# /configure command group
 config = discord.SlashCommandGroup(name="configure", description="Edit bot configuration")
 dailycollectconfig = config.create_subgroup(name="daily-collect", description="Configure daily collect")
 
@@ -258,14 +262,13 @@ async def disable(ctx):
 
     await ctx.respond(embed=embed)
 
-# !dailycollect <enable/disable/status>
-@bot.command()
+# /dailycollect <enable/disable/status>
+@bot.slash_command()
 @commands.has_permissions(administrator=True)
 async def dailycollect(ctx): 
     await send_daily_collect(ctx.channel.id)
 
-# !creed command 
-
+# /creed command 
 @bot.slash_command(name="creed", description="Get a specific creed")
 @option("creed", description="Choose a Creed", choices=["The Nicene Creed", "The Apostle's Creed", "The Athanasian Creed"])
 async def creed(ctx, creed:str):
@@ -293,7 +296,5 @@ async def creed(ctx, creed:str):
         await ctx.respond("Creed was not found.")
     
 
-
-
-# Run the bot
+''' Run the bot '''
 bot.run(token)
