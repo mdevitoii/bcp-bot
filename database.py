@@ -23,6 +23,8 @@ def init_db():
                     (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, collect TEXT, feast TEXT, color TEXT, image TEXT, caption TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS servers
                 (server_id INTEGER PRIMARY KEY, prefix TEXT, time TEXT, channel INTEGER, enabled INTEGER)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS creeds
+                (id INTEGER PRIMARY KEY, title TEXT, version TEXT, creed TEXT)''')
     conn.commit()
     c.execute("SELECT * FROM collects WHERE date = '01-01'")
     test = c.fetchone()
@@ -33,8 +35,10 @@ def init_db():
         seed_db()
         conn.close()
 
-# Seed the DB if it does not contain collects
+# Seed the DB if it does not contain data
 def seed_db():
+
+    # ------- Adding Collects ------- #
     CSV = Path("database/all_collects.csv")
     DB_PATH = Path("database/main.db")
 
@@ -66,7 +70,37 @@ def seed_db():
     c.executemany('INSERT INTO collects (date, collect, feast, color, image, caption) VALUES (?, ?, ?, ?, ?, ?)', rows)
     conn.commit()
     conn.close()
-    print(f"Inserted {len(rows)} rows into database")
+    print(f"Inserted {len(rows)} collects into database")
+
+    # ------- Adding Creeds ------- #
+    CSV = Path("database/creeds.csv")
+
+    # if CSV file isn't found, throw an error
+    if not CSV.exists():
+        print(f"creeds.csv not found.")
+
+    # Get rows from .csv file
+    with CSV.open(newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+
+        rows = []
+        for row in reader:
+            title = row.get("Title","").strip()
+            version = row.get("Version","").strip()
+            creed = row.get("Creed","").strip()
+
+            rows.append((title, version, creed))
+
+    # Add rows to DB
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DROP TABLE IF EXISTS creeds")
+    c.execute('''CREATE TABLE IF NOT EXISTS creeds
+                (id INTEGER PRIMARY KEY, title TEXT, version TEXT, creed TEXT)''')
+    c.executemany('INSERT INTO creeds (title, version, creed) VALUES (?, ?, ?)', rows)
+    conn.commit()
+    conn.close()
+    print(f"Inserted {len(rows)} creeds into database")
 
 # Ensure that a guild exists within the DB
 def ensureGuildExists(server_id):
@@ -248,3 +282,14 @@ def getTodaysCaption():
     if caption[0] == " ":
         return None
     return caption[0]
+
+def getCreed(option):
+    if option:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT version,creed FROM creeds WHERE title = ?", (option,))
+        creed = c.fetchone()
+        conn.close()
+        if creed[0] == " ":
+            return None
+        return (creed[0],creed[1])
