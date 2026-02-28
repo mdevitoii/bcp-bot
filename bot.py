@@ -139,7 +139,7 @@ async def daily_message_timer():
 
 ''' Commands '''
 # /help
-@bot.slash_command(name="help", description="Shows Information and Commands")
+@bot.command(name="help", description="Shows Information and Commands")
 async def help(ctx):
     embed = discord.Embed(    
         title = "List of Commands",
@@ -153,7 +153,7 @@ async def help(ctx):
     await ctx.response.send_message(embed=embed)
 
 # /configure command group
-config = discord.SlashCommandGroup(name="configure", description="Edit bot configuration")
+config = bot.create_group(name="configure", description="Edit bot configuration")
 dailycollectconfig = config.create_subgroup(name="daily-collect", description="Configure daily collect")
 
 @config.command(name="prefix", description="Change the server prefix")
@@ -264,14 +264,14 @@ async def disable(ctx):
     await ctx.respond(embed=embed)
 
 # /dailycollect <enable/disable/status>
-@bot.slash_command()
+@bot.command()
 @commands.has_permissions(administrator=True)
 async def dailycollect(ctx):
     await send_daily_collect(ctx.channel.id)
     await ctx.respond("Daily collect sent!") 
 
 # /creed command 
-@bot.slash_command(name="creed", description="Get a specific creed")
+@bot.command(name="creed", description="Get a specific creed")
 @option("creed", description="Choose a Creed", choices=["The Nicene Creed", "The Apostle's Creed", "The Athanasian Creed"])
 async def creed(ctx, creed:str):
 
