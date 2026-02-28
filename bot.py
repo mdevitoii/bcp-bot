@@ -71,7 +71,7 @@ async def on_guild_remove(guild):
     except:
         print(f'Something went wrong removing server: {guild.id}')
 
-# Main Loop for daily collect time time=time(hour=7, minute=0)
+# Function to send daily collect
 async def send_daily_collect(channel_id):
     # Ensure channel exists
     if channel_id:
@@ -122,6 +122,7 @@ async def send_daily_collect(channel_id):
                 user = await bot.fetch_user(614461308850405389) # ping @mr_minechael
                 await channel.send(f"Error: Today's collect could not be found. Blame <@{user.id}>!")
 
+# Main Loop for daily collect time time=time(hour=7, minute=0)
 @tasks.loop(minutes=1)
 async def daily_message_timer():
     now = datetime.now().strftime("%H:%M") # HH:MM format
@@ -265,8 +266,9 @@ async def disable(ctx):
 # /dailycollect <enable/disable/status>
 @bot.slash_command()
 @commands.has_permissions(administrator=True)
-async def dailycollect(ctx): 
+async def dailycollect(ctx):
     await send_daily_collect(ctx.channel.id)
+    await ctx.respond("Daily collect sent!") 
 
 # /creed command 
 @bot.slash_command(name="creed", description="Get a specific creed")
